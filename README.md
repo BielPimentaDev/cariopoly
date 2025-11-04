@@ -1,92 +1,80 @@
 # Cariopoly
 
-Este repositório contém uma implementação do jogo estilo Monopoly (nome: *Cariopoly*). O projeto está dividido em duas partes principais:
+---
 
-- `backend/` — API em Spring Boot (Java + Maven) que contém a lógica de domínio, casos de uso e infra‑estrutura.
-- `frontend/` — cliente web em Vite + React + TypeScript para interação com o jogo.
+## Visão Geral
 
-Este README explica a arquitetura do projeto, descreve algumas das entidades principais, e contém instruções para rodar o ambiente de desenvolvimento (localmente e com Docker), além de diretrizes básicas para CI/CD com GitHub Actions.
+**Cariopoly** é uma implementação didática do jogo estilo *Monopoly*. O repositório está dividido em duas partes principais:
+
+- `backend/` — API em **Spring Boot** (Java + Maven) com lógica de domínio, casos de uso e adaptadores de infra.
+- `frontend/` — cliente web em **Vite + React + TypeScript**.
+
+> Este README apresenta: arquitetura, entidades do domínio, instruções de desenvolvimento, Docker, testes e Git Flow adotado.
 
 ---
 
-Sumário
-- Visão geral
-- Arquitetura (Hexagonal / Clean Architecture)
-- Entidades e repositórios
-- Ambiente de desenvolvimento (prerequisitos e comandos)
-- Docker e Docker Compose para desenvolvimento
-- Testes e cobertura (JaCoCo)
-- CI/CD e GitHub Actions (pipeline sugerido)
-- Git Flow do projeto
+## Sumário
+
+- [Visão geral](#-visão-geral)
+- [Arquitetura](#-arquitetura---hexagonal-e-clean-architecture)
+- [Entidades e repositórios](#-entidades-principais-exemplos)
+- [Ambiente de desenvolvimento](#-ambiente-de-desenvolvimento)
+- [Docker / Docker Compose](#-docker--docker-compose)
+- [Testes e cobertura](#-testes-e-cobertura)
+- [Testes: importância e estratégias](#-testes-e-sua-importância)
+- [CI/CD (GitHub Actions)](#-cicd-github-actions)
+- [Git Flow do projeto](#-git-flow-do-projeto)
 
 ---
 
-Visão geral
+## 🏗 Arquitetura — Hexagonal e Clean Architecture
 
-Cariopoly é uma versão didática do jogo Monopoly com foco em modelar domínio de jogo por meio de boas práticas arquiteturais. O backend contém o núcleo de domínio (casos de uso, entidades) e adaptadores de infra (repositórios em memória e conectores para DB). O frontend é uma aplicação React que consome a API REST do backend.
+O projeto segue os princípios de **Arquitetura Hexagonal (Ports & Adapters)** e se inspira em **Clean Architecture**:
 
-Arquitetura — Hexagonal e Clean Architecture
+- **Núcleo (Domain)**: entidades e regras de negócio puras.
+- **Use Cases / Application**: orquestram a lógica entre entidades e portas (ex.: `iniciarUmJogo`).
+- **Ports**: interfaces que definem contratos (ex.: `JogoRepository`).
+- **Adapters / Infra**: implementações concretas dos ports (ex.: `InMemoryJogoRepository`, possível adaptador JPA).
 
-O projeto segue princípios da Arquitetura Hexagonal (Ports & Adapters) e está fortemente inspirado em Clean Architecture:
+**Benefícios**:
+- Separação clara entre regras de negócio e infra‑estrutura.
+- Testabilidade e facilidade para trocar implementações de infra.
 
-- Núcleo (Domain): contém as entidades (por exemplo `Jogo`, `Jogador`, `Tabuleiro`, `Casa` e especializações como `Propriedade` e `Prisao`) e as regras de negócio puras.
-- Use Cases / Application: casos de uso que orquestram lógica entre entidades e portas (por exemplo `iniciarUmJogo`).
-- Ports: interfaces (por exemplo `JogoRepository`) que definem contratos para persistência/consulta.
-- Adapters / Infra: implementações concretas dos ports — por exemplo `InMemoryJogoRepository` (adaptador para testes/demonstração) e, potencialmente, um adaptador JPA para Postgres.
+---
 
-Benefícios do padrão adotado:
-- Separação clara entre regras de negócio e detalhes de infra‑estrutura.
-- Testabilidade: núcleo pode ser testado com repositórios em memória ou mocks.
-- Flexibilidade para trocar armazenamento (in memory, Postgres, etc.) sem afetar o domínio.
+## Entidades principais
 
-Entidades principais (exemplos encontrados no código)
+- **`Jogo`** — representa uma partida (estado do jogo, jogadores, turno).
+- **`Jogador`** — representa um jogador (nome, posição, saldo, propriedades, situação).
+- **`Tabuleiro`** — modelo do tabuleiro com casas indexadas.
+- **`Casa`** (superclasse) e subtipos em `core/domain/entity/casa/`:
+  - **`Propriedade`** — casa comprável com preço e aluguel.
+  - **`Prisao`** — regras de prisão e saída.
+- **Use case**: `iniciarUmJogo` (localizado em `core/application/usecase/iniciarUmJogo.java`).
+- **Ports**: `JogoRepository` — contrato de persistência.
+- **Adapters**: `InMemoryJogoRepository` (infra/adapter) — implementação para testes/demonstração.
 
-Durante a análise do backend foram identificados os seguintes artefatos importantes:
+---
 
-- `Jogo` (backend/src/main/java/.../core/domain/entity/Jogo.java)
-  - Representa uma partida. Mantém o estado do jogo, jogadores, turno atual e regras aplicáveis.
+## Ambiente de desenvolvimento
 
-- `Jogador` (backend/src/main/java/.../core/domain/entity/Jogador.java)
-  - Representa um jogador (nome, posição no tabuleiro, saldo, propriedades possuídas, situação — p.ex. preso).
+**Pré‑requisitos recomendados**
 
-- `Tabuleiro` (backend/src/main/java/.../core/domain/entity/Tabuleiro.java)
-  - Modelo do tabuleiro do jogo, com casas indexadas.
+- Java JDK **21** (o `pom.xml` define target/source Java 21).
+- Maven (ou use o wrapper: `mvnw` / `mvnw.cmd`).
+- Node.js LTS (>= 18) e npm/yarn.
+- Docker & Docker Compose (para executar backend + Postgres).
 
-- `Casa` (e subtipos em `core/domain/entity/casa/`)
-  - Superclasse para diferentes tipos de casas no tabuleiro.
-  - `Propriedade` — casa comprável, com preço, aluguel e propriedade atual.
-  - `Prisao` — casa que representa a prisão, com regras de entrada/saída.
-
-- `iniciarUmJogo` (use case) — caso de uso localizado em `core/application/usecase/iniciarUmJogo.java` que mostra como inicializar uma partida.
-
-Repositórios / Ports
-
-- `JogoRepository` (port) — interface que define operações de persistência e consulta para o agregado Jogo.
-- `InMemoryJogoRepository` (adapter) — implementação simples utilizada para testes ou para executar o jogo sem um banco de dados externo.
-
-Esses componentes seguem o padrão Port & Adapter: o domínio depende apenas de interfaces (ports) e as implementações concretas ficam na camada de infra.
-
-Ambiente de desenvolvimento
-
-Pré‑requisitos recomendados
-- Java JDK 21 (recomenda-se JDK 21 porque o projeto define target/source Java 21 no Maven; ver `backend/pom.xml`).
-- Maven (ou usar o wrapper incluido `mvnw` / `mvnw.cmd` no Windows).
-- Node.js (versão LTS >= 18) e npm ou yarn — o frontend é gerado com Vite.
-- Docker e Docker Compose (para rodar backend + banco facilmente).
-
-Executando o backend localmente (sem Docker)
-No Windows (cmd.exe):
+### Executando o backend localmente (Windows - cmd.exe)
 
 ```cmd
 cd backend
 mvnw.cmd clean test spring-boot:run
 ```
 
-- O projeto inclui o Maven Wrapper (`mvnw`, `mvnw.cmd`) — use-o para garantir consistência de Maven.
-- Os testes são executados pelo `mvnw.cmd test`; a fase `verify` também irá gerar e checar cobertura via JaCoCo (configurado no `pom.xml` com limite mínimo de 80%).
+- Observação: use o `mvnw.cmd` incluído para garantir a versão do Maven.
 
-Executando o frontend localmente
-No Windows (cmd.exe):
+### Executando o frontend localmente (Windows - cmd.exe)
 
 ```cmd
 cd frontend
@@ -94,144 +82,132 @@ npm install
 npm run dev
 ```
 
-- O `package.json` (frontend) contém os scripts `dev`, `build`, `preview`.
-- A aplicação Vite estará disponível por padrão em `http://localhost:5173` (ver saída do vite).
+- O Vite tipicamente expõe a aplicação em `http://localhost:5173`.
 
-Docker e Docker Compose (ambiente de desenvolvimento)
+---
 
-O backend inclui um `docker-compose.yml` (na pasta `backend`) que define dois serviços:
-- `app`: imagem construída a partir do `backend/Dockerfile`, expõe a porta 8080.
-- `db`: container Postgres (versão 15) com credenciais e volume persistente.
+## Docker / Docker Compose
 
-As variáveis de ambiente definidas no compose são:
-- SPRING_DATASOURCE_URL = jdbc:postgresql://db:5432/app_db
-- SPRING_DATASOURCE_USERNAME = postgres
-- SPRING_DATASOURCE_PASSWORD = postgres
-- SPRING_JPA_HIBERNATE_DDL_AUTO = update
+O `backend/docker-compose.yml` define dois serviços:
 
-Para subir o backend com Postgres via Docker Compose (no Windows cmd.exe):
+- `app` — constrói a partir de `backend/Dockerfile` e expõe a porta **8080**.
+- `db` — container **Postgres 15** (porta 5432) com volume persistente.
+
+Variáveis de ambiente definidas no compose:
+
+- `SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/app_db`
+- `SPRING_DATASOURCE_USERNAME=postgres`
+- `SPRING_DATASOURCE_PASSWORD=postgres`
+- `SPRING_JPA_HIBERNATE_DDL_AUTO=update`
+
+### Subir com Docker Compose (Windows - cmd.exe)
 
 ```cmd
 cd backend
 docker-compose up --build
 ```
 
-- A API ficará disponível em `http://localhost:8080`.
-- O Postgres será exposto na porta `5432` (mapeada localmente) com banco `app_db` e usuário `postgres`.
+- API disponível: `http://localhost:8080`.
 
-Notas e dicas
-- Se preferir rodar o backend localmente com o banco remoto (não via Docker), atualize as propriedades do `application.properties` / `application.yml` ou defina variáveis de ambiente equivalentes.
-- O `backend/pom.xml` tem configuração do JaCoCo para gerar relatório de cobertura (ver diretório `backend/htmlReport/`): a pipeline de CI deve publicar esse relatório ou falhar se a cobertura ficar abaixo do mínimo configurado (80%).
+---
 
-Testes e cobertura
+## Testes e cobertura (JaCoCo)
 
-- Para rodar testes e gerar relatórios localmente:
+- Para rodar testes e gerar relatórios locais:
 
 ```cmd
 cd backend
 mvnw.cmd clean verify
 ```
 
-- Os relatórios JaCoCo estarão disponíveis em `backend/target/site` ou em `backend/htmlReport/` dependendo da execução local.
+- O JaCoCo está configurado no `pom.xml` com **verificação mínima de cobertura: 80%**.
+- Relatórios podem aparecer em `backend/target/site` ou em `backend/htmlReport/`.
 
-Testes e sua importância
+---
 
-A qualidade do software depende diretamente de uma boa estratégia de testes. Abaixo segue um resumo das camadas de testes recomendadas e por que cada uma é importante para este projeto:
+## Testes e sua importância
 
-- Testes de Unidade (unit tests):
-  - Cobrem regras isoladas do domínio (por exemplo comportamentos de `Jogo`, `Jogador`, `Propriedade`).
-  - Devem ser rápidos e independentes de infra (usar `InMemoryJogoRepository` ou mocks).
-  - Comando (backend):
+**Por que testar?**
+- Reduz regressões.
+- Documenta comportamento esperado do sistema.
+- Permite refatorações com segurança.
+
+**Tipos de testes recomendados**
+
+1. **Testes de Unidade**
+   - Cobrem regras isoladas do domínio (`Jogo`, `Jogador`, `Propriedade`).
+   - Devem ser rápidos e independentes de infra.
+   - Executar:
 
 ```cmd
 cd backend
 mvnw.cmd -Dtest=*Test test
 ```
 
-- Testes de Integração (integration tests):
-  - Verificam integração entre camadas (ex.: controllers, services e repositórios reais ou em container).
-  - Úteis para validar mapeamentos JPA, configuração do Spring e interações com o banco.
-  - Rodar com profile de integração ou um banco em container (Docker).
+2. **Testes de Integração**
+   - Validam integração entre camadas (controllers, services, repositórios reais).
+   - Úteis para validar mapeamentos JPA e configuração do Spring.
+   - Podem rodar usando um banco em container (Docker).
 
-- Testes de Aceitação / End‑to‑End (e2e):
-  - Testam fluxos completos, por exemplo: iniciar um jogo via API, executar alguns turnos e validar estado final.
-  - Podem ser escritos como testes automatizados no backend ou como testes de integração UI (Playwright / Cypress) no frontend.
+3. **Testes de Aceitação / E2E**
+   - Validam fluxos completos (ex.: iniciar um jogo via API e executar turnos).
+   - Implementáveis no backend ou via testes de UI (Playwright / Cypress).
 
-- Cobertura (JaCoCo):
-  - O projeto está configurado para exigir cobertura mínima (80%). Cobertura alta não garante ausência de bugs, mas reduz regressões.
+**Boas práticas**
+- Escrever testes determinísticos.
+- Usar fixtures/factories para estados do jogo.
+- Rodar testes no CI para bloquear regressões.
 
-- Boas práticas adicionais:
-  - Escrever testes determinísticos (sem ordem dependente ou temporizações frágeis).
-  - Usar fixtures e fábricas de objetos para criar estados de jogo reutilizáveis.
-  - Executar testes em pipeline CI para impedir regressões antes do merge.
-
-CI local rápido (smoke test)
+**Smoke test rápido (CI local)**
 
 ```cmd
 cd backend
 mvnw.cmd -DskipTests=false -DskipITs=true clean verify
 ```
 
+---
 
-CI/CD e GitHub Actions (exemplo de pipeline)
+## CI/CD (GitHub Actions) — fluxo sugerido
 
-Sugestão de etapas para um workflow de CI/CD no GitHub Actions:
-1. checkout
-2. Setup JDK (Java 21) and Node.js
-3. Build & test backend (mvn -B -DskipTests=false clean verify) — garante que JaCoCo roda e coverage é verificada
-4. Build & test frontend (npm ci && npm run build)
-5. Executar linters e checks (eslint, etc.)
-6. Build da imagem Docker do backend e push para registry (opcional)
-7. Deploy em ambiente target (staging/production) — por exemplo usando uma action para Kubernetes, Docker Hub, ECS ou outra infra
+**Jobs sugeridos**
 
-Notas práticas para GitHub Actions
-- Use caching para Maven (`actions/cache`) e para dependências Node (`~/.npm` ou `~/.cache/yarn`) para acelerar builds.
-- Separe jobs: `build_and_test_backend`, `build_and_test_frontend`, `publish_images` — isso facilita execução paralela e isolamento de falhas.
-- Publish cobertura: extraia os artefatos JaCoCo e publique em relatório de cobertura (ou envie para SonarQube / Codecov se usar essas ferramentas).
+1. `build_backend` — Setup JDK 21, rodar `mvn clean verify` (gera e checa JaCoCo).
+2. `build_frontend` — Setup Node.js 18, `npm ci` e `npm run build`.
+3. `docker_build_and_push` — opcional: build e push da imagem Docker (requer secrets).
 
-Exemplo de checks automáticos que recomendamos no pipeline
-- `mvn -B -DskipTests=false clean verify` (falha se cobertura < 80%)
-- `npm ci && npm run build` (verifica se frontend compila)
-- `npm run lint` (caso esteja configurado)
+**Dicas**
+- Use `actions/cache` para Maven e Node para acelerar builds.
+- Separe jobs para executar em paralelo e isolar falhas.
+- Publique os relatórios JaCoCo como artifacts ou envie para Codecov/SonarQube.
 
-Observações finais / Sugestões de evolução
-- Implementar um adaptador JPA/Repository para persistir `Jogo` em Postgres (agora existe um `InMemoryJogoRepository`).
-- Adicionar workflows do GitHub Actions em `.github/workflows/` com jobs separados por serviço.
-- Melhorar documentação de API (Swagger/OpenAPI) e adicionar endpoints de exemplo para facilitar integração do frontend.
+---
 
-Git Flow do projeto
+##  Git Flow do projeto
 
-Este repositório adota um Git Flow simples com as seguintes regras:
+**Branches principais**
 
-- Branches principais:
-  - `main` — contém código pronto para produção; somente merges que passaram por revisão e pipeline devem chegar aqui.
-  - `develop` — integra as features concluídas; é a base para deploys de integração/staging.
+- `main` — código pronto para produção (somente merges aprovados e com CI verde).
+- `develop` — integra features concluídas; base para staging/integration.
 
-- Fluxo de trabalho para novos épicos/features:
-  1. Crie uma branch a partir de `main` para o épico: `feat/[CODIGO_EPICO]-descricao-curta`.
-  2. Trabalhe na branch da feature até concluir o épico. Faça commits pequenos e atômicos.
-  3. Abra um Pull Request contra `develop` quando a feature estiver pronta.
-  4. O PR deve passar pelos pipelines de CI (build, testes, cobertura) e revisão de código.
-  5. Após aprovação e testes em `develop`, o conjunto de features testadas é mesclado em `main` (release) — preferencialmente via Pull Request e com um novo build/CI final.
+**Fluxo para épicos / features**
 
-Exemplo de comandos para criar e enviar uma feature:
+1. Crie a branch do épico a partir de `main`:
 
 ```bash
 # criar a branch a partir da main
 git checkout main
 git pull origin main
-git checkout -b feat/CODIGO123
-
-# trabalhar, commitar, push
-git add .
-git commit -m "[RF-X] feat: adiciona lógica X"
-git push
+git checkout -b feat/CODIGO123-descricao
 ```
 
-Regras operacionais importantes
-- Nunca fazer merge direto na `main` sem passagem por `develop` e CI (exceto em emergência documentada).
-- Os Pull Requests devem conter descrição do que foi feito, status dos testes, e screenshots quando necessário.
-- Tags de versão e releases são criadas a partir da `main`.
+2. Trabalhe na branch (`feat/[CODIGO_EPICO]-...`), commite frequentemente.
+3. Abra um Pull Request para `develop` quando pronto.
+4. O PR deve passar pelo pipeline (build, testes, cobertura) e revisão.
+5. Após validação em `develop`, o conjunto de features é mergeado em `main` (release).
+
+**Regras operacionais**
+- **Não** faça merge direto em `main` sem passar por `develop` e CI (exceto emergência documentada).
+- PRs devem conter descrição, checklist de testes e screenshots quando relevantes.
+- Tags e releases são criados a partir de `main`.
 
 ---
-
