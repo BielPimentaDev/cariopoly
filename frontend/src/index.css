@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 200 30% 96%;
+    --foreground: 220 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
+
+    /* Rio ocean blue */
+    --primary: 200 85% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Rio tropical green */
+    --secondary: 150 60% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 200 20% 90%;
+    --muted-foreground: 220 15% 45%;
+
+    /* Rio sun yellow */
+    --accent: 45 95% 60%;
+    --accent-foreground: 220 20% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 20% 85%;
+    --input: 200 20% 85%;
+    --ring: 200 85% 45%;
+
+    --radius: 0.75rem;
+
+    /* Player colors */
+    --player-1: 210 100% 50%;
+    --player-2: 0 85% 55%;
+    --player-3: 140 65% 45%;
+    --player-4: 270 70% 55%;
+
+    /* Board colors */
+    --board-bg: 200 25% 94%;
+    --cell-bg: 0 0% 98%;
+    --cell-border: 200 20% 75%;
+
+    /* Gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(200 85% 45%), hsl(200 75% 55%));
+    --gradient-tropical: linear-gradient(135deg, hsl(150 60% 45%), hsl(150 50% 55%));
+    --gradient-sunset: linear-gradient(135deg, hsl(45 95% 60%), hsl(35 90% 60%));
+
+    /* Shadows */
+    --shadow-board: 0 10px 40px -10px hsl(200 50% 40% / 0.3);
+    --shadow-card: 0 4px 12px -2px hsl(200 30% 40% / 0.15);
+    --shadow-pawn: 0 4px 8px -2px hsl(var(--player-1) / 0.4);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
