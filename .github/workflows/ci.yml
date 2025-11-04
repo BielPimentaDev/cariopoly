@@ -3,8 +3,13 @@ name: CI - Spring Boot with Docker
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - 'backend/**'
 
 jobs:
   build:
