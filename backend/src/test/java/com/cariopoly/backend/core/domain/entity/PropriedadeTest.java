@@ -15,7 +15,6 @@ public class PropriedadeTest {
         assertEquals(200, p.getValorDeCompra());
         assertEquals(20, p.getValorDeAluguel());
         assertNull(p.getDono());
-
         assertFalse(p.isHipotecada());
     }
 }
