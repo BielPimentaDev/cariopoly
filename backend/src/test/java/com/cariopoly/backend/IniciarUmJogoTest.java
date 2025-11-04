@@ -7,6 +7,7 @@ import com.cariopoly.backend.core.domain.entity.Tabuleiro;
 import com.cariopoly.backend.core.domain.entity.casa.Casa;
 import com.cariopoly.backend.core.domain.entity.casa.Propriedade;
 import com.cariopoly.backend.core.domain.entity.casa.Prisao;
+import com.cariopoly.backend.infra.adapter.InMemoryJogoRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -39,7 +40,8 @@ public class IniciarUmJogoTest {
         List<Casa> casas = criarCasas(10);
         Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
 
-        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
+        InMemoryJogoRepository repo = new InMemoryJogoRepository();
+        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores, repo);
         Jogo jogo = useCase.executar();
 
         assertNotNull(jogo, "O jogo não deve ser nulo após iniciar com 2 jogadores e 10 casas");
@@ -56,7 +58,8 @@ public class IniciarUmJogoTest {
         List<Casa> casas = criarCasas(10);
         Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
 
-        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
+        InMemoryJogoRepository repo = new InMemoryJogoRepository();
+        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores, repo);
         Jogo jogo = useCase.executar();
 
         assertNotNull(jogo, "O jogo não deve ser nulo após iniciar com 4 jogadores e 10 casas (limite)");
@@ -74,7 +77,8 @@ public class IniciarUmJogoTest {
         List<Casa> casas = criarCasas(10);
         Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
 
-        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
+        InMemoryJogoRepository repo = new InMemoryJogoRepository();
+        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores, repo);
 
         assertThrows(IllegalArgumentException.class, useCase::executar,
                 "Deve lançar IllegalArgumentException quando mais de 4 jogadores são informados");
@@ -89,7 +93,8 @@ public class IniciarUmJogoTest {
         List<Casa> casas = criarCasas(9);
         Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
 
-        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
+        InMemoryJogoRepository repo = new InMemoryJogoRepository();
+        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores, repo);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, useCase::executar);
         assertEquals("O jogo deve ter 10 casas.", ex.getMessage());
@@ -104,9 +109,29 @@ public class IniciarUmJogoTest {
         List<Casa> casas = criarCasas(11);
         Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
 
-        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
+        InMemoryJogoRepository repo = new InMemoryJogoRepository();
+        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores, repo);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, useCase::executar);
         assertEquals("O jogo deve ter 10 casas.", ex.getMessage());
+    }
+
+    @Test
+    public void iniciarUmJogoTest_shouldPersistGame() {
+        Jogador p1 = new Jogador("Alice", 0, 1500);
+        Jogador p2 = new Jogador("Bob", 0, 1500);
+        List<Jogador> jogadores = Arrays.asList(p1, p2);
+
+        List<Casa> casas = criarCasas(10);
+        Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
+
+        InMemoryJogoRepository repo = new InMemoryJogoRepository();
+        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores, repo);
+        Jogo jogo = useCase.executar();
+
+        // verifica que o jogo foi salvo no repositório em memória
+        List<Jogo> jogosSalvos = repo.listar();
+        assertEquals(1, jogosSalvos.size());
+        assertSame(jogosSalvos.get(0), jogo);
     }
 }
