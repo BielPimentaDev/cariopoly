@@ -4,42 +4,62 @@ import com.cariopoly.backend.core.application.usecase.iniciarUmJogo;
 import com.cariopoly.backend.core.domain.entity.Jogo;
 import com.cariopoly.backend.core.domain.entity.Jogador;
 import com.cariopoly.backend.core.domain.entity.Tabuleiro;
+import com.cariopoly.backend.core.domain.entity.casa.Casa;
+import com.cariopoly.backend.core.domain.entity.casa.Propriedade;
+import com.cariopoly.backend.core.domain.entity.casa.Prisao;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class IniciarUmJogoTest {
 
+    // helper para criar uma lista de casas com tamanho variável
+    private List<Casa> criarCasas(int quantidade) {
+        // criar casas simples reusáveis: propriedades e prisões alternadas
+        Casa[] casas = new Casa[quantidade];
+        for (int i = 0; i < quantidade; i++) {
+            if (i % 5 == 0) {
+                casas[i] = new Prisao("Prisao" + i, i);
+            } else {
+                casas[i] = new Propriedade("Prop" + i, i, 100 + i, 10 + i);
+            }
+        }
+        return Arrays.asList(casas);
+    }
+
     @Test
-    public void iniciarUmJogoTest_withSuccess_twoPlayers() {
+    public void iniciarUmJogoTest_withSuccess_twoPlayers_exactly10Casas() {
         Jogador p1 = new Jogador("Alice", 0, 1500);
         Jogador p2 = new Jogador("Bob", 0, 1500);
         List<Jogador> jogadores = Arrays.asList(p1, p2);
-        Tabuleiro tabuleiro = new Tabuleiro(jogadores, Collections.emptyList());
+
+        List<Casa> casas = criarCasas(10);
+        Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
 
         iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
         Jogo jogo = useCase.executar();
 
-        assertNotNull(jogo, "O jogo não deve ser nulo após iniciar com 2 jogadores");
+        assertNotNull(jogo, "O jogo não deve ser nulo após iniciar com 2 jogadores e 10 casas");
     }
 
     @Test
-    public void iniciarUmJogoTest_withSuccess_fourPlayers() {
+    public void iniciarUmJogoTest_withSuccess_fourPlayers_exactly10Casas() {
         Jogador p1 = new Jogador("P1", 0, 1500);
         Jogador p2 = new Jogador("P2", 0, 1500);
         Jogador p3 = new Jogador("P3", 0, 1500);
         Jogador p4 = new Jogador("P4", 0, 1500);
         List<Jogador> jogadores = Arrays.asList(p1, p2, p3, p4);
-        Tabuleiro tabuleiro = new Tabuleiro(jogadores, Collections.emptyList());
+
+        List<Casa> casas = criarCasas(10);
+        Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
 
         iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
         Jogo jogo = useCase.executar();
 
-        assertNotNull(jogo, "O jogo não deve ser nulo após iniciar com 4 jogadores (limite)");
+        assertNotNull(jogo, "O jogo não deve ser nulo após iniciar com 4 jogadores e 10 casas (limite)");
     }
 
     @Test
@@ -50,11 +70,43 @@ public class IniciarUmJogoTest {
         Jogador p4 = new Jogador("P4", 0, 1500);
         Jogador p5 = new Jogador("P5", 0, 1500);
         List<Jogador> jogadores = Arrays.asList(p1, p2, p3, p4, p5);
-        Tabuleiro tabuleiro = new Tabuleiro(jogadores, Collections.emptyList());
+
+        List<Casa> casas = criarCasas(10);
+        Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
 
         iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
 
         assertThrows(IllegalArgumentException.class, useCase::executar,
                 "Deve lançar IllegalArgumentException quando mais de 4 jogadores são informados");
+    }
+
+    @Test
+    public void iniciarUmJogoTest_tabuleiroWithNineCasas_shouldThrow() {
+        Jogador p1 = new Jogador("Alice", 0, 1500);
+        Jogador p2 = new Jogador("Bob", 0, 1500);
+        List<Jogador> jogadores = Arrays.asList(p1, p2);
+
+        List<Casa> casas = criarCasas(9);
+        Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
+
+        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, useCase::executar);
+        assertEquals("O jogo deve ter 10 casas.", ex.getMessage());
+    }
+
+    @Test
+    public void iniciarUmJogoTest_tabuleiroWithElevenCasas_shouldThrow() {
+        Jogador p1 = new Jogador("Alice", 0, 1500);
+        Jogador p2 = new Jogador("Bob", 0, 1500);
+        List<Jogador> jogadores = Arrays.asList(p1, p2);
+
+        List<Casa> casas = criarCasas(11);
+        Tabuleiro tabuleiro = new Tabuleiro(jogadores, casas);
+
+        iniciarUmJogo useCase = new iniciarUmJogo(tabuleiro, jogadores);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, useCase::executar);
+        assertEquals("O jogo deve ter 10 casas.", ex.getMessage());
     }
 }
