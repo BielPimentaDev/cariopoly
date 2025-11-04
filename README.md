@@ -27,7 +27,7 @@
 
 ---
 
-## 🏗 Arquitetura — Hexagonal e Clean Architecture
+## Arquitetura — Hexagonal e Clean Architecture
 
 O projeto segue os princípios de **Arquitetura Hexagonal (Ports & Adapters)** e se inspira em **Clean Architecture**:
 
