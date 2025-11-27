@@ -42,7 +42,28 @@ public class Jogador {
         this.turnosRestantesNaPrisão = 3;
     }
 
+    // Novos métodos para gerenciamento financeiro e de propriedades
+    public boolean podePagar(int amount) {
+        return this.balance >= amount;
+    }
 
+    public void debitar(int amount) {
+        this.balance -= amount;
+    }
 
+    public void creditar(int amount) {
+        this.balance += amount;
+    }
 
+    public void adicionarPropriedade(Propriedade p) {
+        if (p != null && !this.propriedades.contains(p)) {
+            this.propriedades.add(p);
+        }
+    }
+
+    public void removerPropriedade(Propriedade p) {
+        if (p != null) {
+            this.propriedades.remove(p);
+        }
+    }
 }
